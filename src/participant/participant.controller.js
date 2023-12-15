@@ -23,13 +23,7 @@ router.get("/:id", async (req, res) => {
   try {
     const participantId = req.params.id;
 
-    if (!Number.isInteger(parseInt(participantId))) {
-      return res.status(400).json({
-        message: "Invalid participant ID format. Must be an integer.",
-      });
-    }
-
-    const participant = await getParticipantById(parseInt(participantId));
+    const participant = await getParticipantById(participantId);
 
     if (!participant) {
       return res.status(404).json({ message: "Participant not found." });
@@ -60,6 +54,7 @@ router.post("/", async (req, res) => {
       document,
     } = req.body;
 
+    // Validasi apakah semua field terisi
     if (
       !name ||
       !nim ||
@@ -75,6 +70,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Some fields are missing" });
     }
 
+    // Cek apakah peserta sudah ada berdasarkan beberapa field tertentu
     const existingParticipant = await getParticipantAlreadyExist(
       name,
       nim,
@@ -91,40 +87,54 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Participant already exists" });
     }
 
+    // Validasi tipe data dan ubah ke uppercase
+    const uppercaseName = name.toUpperCase();
+    const uppercaseNim = nim.toUpperCase();
+    const uppercaseParticipantClass = participantClass.toUpperCase();
+    const uppercaseMajor = major.toUpperCase();
+    const uppercaseFaculty = faculty.toUpperCase();
+    const uppercaseGender = gender.toUpperCase();
+    const uppercasePhoneNumber = phone_number.toUpperCase();
+    const uppercaseEntryYear = entry_year.toUpperCase();
+
     if (
-      typeof name !== "string" ||
-      typeof nim !== "string" ||
-      typeof participantClass !== "string" ||
+      typeof uppercaseName !== "string" ||
+      typeof uppercaseNim !== "string" ||
+      typeof uppercaseParticipantClass !== "string" ||
       typeof email !== "string" ||
-      typeof major !== "string" ||
-      typeof faculty !== "string" ||
-      typeof gender !== "string" ||
-      typeof phone_number !== "string" ||
-      typeof entry_year !== "string" ||
+      typeof uppercaseMajor !== "string" ||
+      typeof uppercaseFaculty !== "string" ||
+      typeof uppercaseGender !== "string" ||
+      typeof uppercasePhoneNumber !== "string" ||
+      typeof uppercaseEntryYear !== "string" ||
       typeof document !== "string"
     ) {
       return res.status(400).json({ message: "Invalid data types or values" });
     }
 
+    // Buat peserta baru dengan data yang sudah diubah
     const newParticipant = await createParticipant({
-      name,
-      nim,
-      class: participantClass,
-      major,
+      name: uppercaseName,
+      nim: uppercaseNim,
+      class: uppercaseParticipantClass,
+      major: uppercaseMajor,
       email,
-      faculty,
-      gender,
-      phone_number,
-      entry_year,
+      faculty: uppercaseFaculty,
+      gender: uppercaseGender,
+      phone_number: uppercasePhoneNumber,
+      entry_year: uppercaseEntryYear,
       document,
     });
 
+    // Jika berhasil, kirim respons sukses
     res.status(201).json({
       message: "Register participant success",
       data: newParticipant,
     });
   } catch (error) {
     console.error(error);
+
+    // Tangani kesalahan jika post tidak berhasil
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -134,10 +144,7 @@ router.patch("/:id", async (req, res) => {
     const participantId = req.params.id;
     const participantData = req.body;
 
-    const participant = await updateParticipant(
-      parseInt(participantId),
-      participantData
-    );
+    const participant = await updateParticipant(participantId, participantData);
 
     res.json({
       message: "update participant success",
@@ -152,7 +159,7 @@ router.delete("/:id", async (req, res) => {
   try {
     const participantId = req.params.id;
 
-    await deleteParticipant(parseInt(participantId));
+    await deleteParticipant(participantId);
 
     res.json({
       message: "delete participant success",
