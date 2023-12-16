@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Participant {
-  id           String     @id @default(cuid())
+  id           Int        @id @default(autoincrement())
   name         String     @unique
   nim          String     @unique
   class        String
